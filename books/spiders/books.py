@@ -4,13 +4,13 @@ import scrapy
 
 class BooksSpider(scrapy.Spider):
     name = "books"
-    allowed_domains = ["books.toscrape.com"]
+    allowed_domains = ["santechallianz.com"]
     start_urls = [
-        'http://books.toscrape.com/',
+        'http://www.santechallianz.com/ru/catalog/6169/56101/',
     ]
 
     def parse(self, response):
-        for book_url in response.css("article.product_pod > h3 > a ::attr(href)").extract():
+        for book_url in response.css("div.js-element js-elementid56091 simple propvision1 > div.inner > div.padd > a ::attr(href)").extract():
             yield scrapy.Request(response.urljoin(book_url), callback=self.parse_book_page)
         next_page = response.css("li.next > a ::attr(href)").extract_first()
         if next_page:
@@ -18,13 +18,13 @@ class BooksSpider(scrapy.Spider):
 
     def parse_book_page(self, response):
         item = {}
-        product = response.css("div.product_main")
-        item["title"] = product.css("h1 ::text").extract_first()
+        product = response.css("div.info")
+        item["title"] = product.css("div.el-size > span ::text").extract_first()
         item['category'] = response.xpath(
-            "//ul[@class='breadcrumb']/li[@class='active']/preceding-sibling::li[1]/a/text()"
+            "//div[@id='properties']/div[@class='val']/preceding-sibling::li[1]/a/text()"
         ).extract_first()
         item['description'] = response.xpath(
-            "//div[@id='product_description']/following-sibling::p/text()"
+            "//div[@id='detailtext']/following-sibling::p/text()"
         ).extract_first()
-        item['price'] = response.css('p.price_color ::text').extract_first()
+        item['price'] = response.css("div.price price_pdv_BASE ::text").extract_first()
         yield item
